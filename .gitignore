@@ -37,3 +37,6 @@ Thumbs.db
 uploads/
 reports/
 exports/
+
+# Local application secret
+.secret_key

@@ -18,13 +18,19 @@ def calculate_network(ip_address, subnet_mask=None):
         subnet_mask = subnet_mask.strip()
         try:
             network = ipaddress.ip_network(f"{ip_address}/{subnet_mask}", strict=False)
-            all_hosts = list(network.hosts())
-            if all_hosts:
-                first_host = str(all_hosts[0])
-                last_host = str(all_hosts[-1])
+            num_addresses = network.num_addresses
+            if num_addresses == 1:
+                first_host = str(network.network_address)
+                last_host = str(network.network_address)
+                usable_hosts = 1
+            elif num_addresses == 2:
+                first_host = str(network.network_address)
+                last_host = str(network.network_address + 1)
+                usable_hosts = 2
             else:
-                first_host = "N/A"
-                last_host = "N/A"
+                first_host = str(network.network_address + 1)
+                last_host = str(network.broadcast_address - 1)
+                usable_hosts = num_addresses - 2
             return {
                 "success": True,
                 "network_address": str(network.network_address),
@@ -32,8 +38,8 @@ def calculate_network(ip_address, subnet_mask=None):
                 "cidr": str(network),
                 "first_host": first_host,
                 "last_host": last_host,
-                "total_addresses": network.num_addresses,
-                "usable_hosts": len(all_hosts)
+                "total_addresses": num_addresses,
+                "usable_hosts": usable_hosts
             }
         except ValueError as error:
             return {
@@ -48,16 +54,28 @@ def calculate_network(ip_address, subnet_mask=None):
     if "/" in target:
         try:
             network = ipaddress.ip_network(target, strict=False)
-            all_hosts = list(network.hosts())
+            num_addresses = network.num_addresses
+            if num_addresses == 1:
+                first_host = str(network.network_address)
+                last_host = str(network.network_address)
+                usable_hosts = 1
+            elif num_addresses == 2:
+                first_host = str(network.network_address)
+                last_host = str(network.network_address + 1)
+                usable_hosts = 2
+            else:
+                first_host = str(network.network_address + 1)
+                last_host = str(network.broadcast_address - 1)
+                usable_hosts = num_addresses - 2
             return {
                 "success": True,
                 "network_address": str(network.network_address),
                 "broadcast_address": str(network.broadcast_address) if hasattr(network, "broadcast_address") else "N/A",
                 "cidr": str(network),
-                "first_host": str(all_hosts[0]) if all_hosts else str(network.network_address),
-                "last_host": str(all_hosts[-1]) if all_hosts else str(network.network_address),
-                "total_addresses": network.num_addresses,
-                "usable_hosts": len(all_hosts) if all_hosts else 1
+                "first_host": first_host,
+                "last_host": last_host,
+                "total_addresses": num_addresses,
+                "usable_hosts": usable_hosts
             }
         except ValueError as error:
             return {"success": False, "error": f"Invalid CIDR: {str(error)}"}

@@ -276,5 +276,21 @@ class TestTargetSafetyValidation(unittest.TestCase):
         self.assertTrue(res2["success"])
         self.assertEqual(res2["total_addresses"], 12)
 
+    def test_large_cidr_speed(self):
+        from scanner import calculate_network, validate_scan_target
+        
+        # Testing a massive /8 CIDR subnet. Should evaluate instantly without memory load
+        res = calculate_network("10.0.0.0/8")
+        self.assertTrue(res["success"])
+        self.assertEqual(res["total_addresses"], 16777216)
+        self.assertEqual(res["usable_hosts"], 16777214)
+        self.assertEqual(res["first_host"], "10.0.0.1")
+        self.assertEqual(res["last_host"], "10.255.255.254")
+        
+        # Size limit check should reject it successfully
+        val_res = validate_scan_target(res, "fast")
+        self.assertFalse(val_res["success"])
+        self.assertIn("too large", val_res["error"])
+
 if __name__ == '__main__':
     unittest.main()
