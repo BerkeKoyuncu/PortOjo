@@ -40,3 +40,4 @@ exports/
 
 # Local application secret
 .secret_key
+.secret_key_flask
